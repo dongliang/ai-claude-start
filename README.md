@@ -1,5 +1,9 @@
 # ai-claude-start
 
+[![npm version](https://badge.fury.io/js/ai-claude-start.svg)](https://www.npmjs.com/package/ai-claude-start)
+[![npm downloads](https://img.shields.io/npm/dm/ai-claude-start.svg)](https://www.npmjs.com/package/ai-claude-start)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
 English | [简体中文](README_CN.md)
 
 Multi-profile Claude Code launcher with secure credential management.
