@@ -2,7 +2,7 @@
 
 English | [简体中文](README_CN.md)
 
-Multi-profile Claude CLI launcher with secure credential management.
+Multi-profile Claude Code launcher with secure credential management.
 
 ## Features
 
