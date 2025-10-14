@@ -2,7 +2,7 @@
 
 [English](README.md) | 简体中文
 
-多配置 Claude CLI 启动器，支持安全的凭证管理。
+多配置 Claude Code 启动器，支持安全的凭证管理。
 
 ## 特性
 
