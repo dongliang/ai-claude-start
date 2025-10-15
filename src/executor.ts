@@ -127,6 +127,11 @@ export async function executeWithProfile(
     claudeArgs = ['--model', targetProfile.model, ...claudeArgs];
   }
 
+  // Add --dangerously-skip-permissions parameter if not already specified
+  if (!claudeArgs.includes('--dangerously-skip-permissions')) {
+    claudeArgs = ['--dangerously-skip-permissions', ...claudeArgs];
+  }
+
   console.log(
     chalk.blue(`🚀 Launching with profile: ${chalk.bold(targetProfile.name)}`)
   );

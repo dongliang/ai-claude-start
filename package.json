@@ -6,7 +6,7 @@
   "main": "dist/index.js",
   "bin": {
     "ai-claude-start": "./dist/cli.js",
-    "claude-start": "./dist/cli.js"
+    "ccs": "./dist/cli.js"
   },
   "scripts": {
     "build": "tsc",
