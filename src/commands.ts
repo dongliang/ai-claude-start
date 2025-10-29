@@ -6,7 +6,10 @@ import {
   storeCredential,
   deleteCredential,
   getAllProfilesWithCredentials,
-  isKeytarAvailable
+  isKeytarAvailable,
+  storeApiKey,
+  getApiKey,
+  deleteApiKey
 } from './storage.js';
 import { PRESETS, type Profile } from './types.js';
 import { spawn } from 'child_process';
@@ -97,6 +100,16 @@ export async function setupProfile(): Promise<void> {
     }
   ]);
 
+  // Ask for API key (optional)
+  const { apiKey } = await inquirer.prompt<{ apiKey: string }>([
+    {
+      type: 'password',
+      name: 'apiKey',
+      message: 'Enter your ANTHROPIC_API_KEY (optional, press Enter to skip):',
+      mask: '*'
+    }
+  ]);
+
   // Save profile
   const config = readConfig();
   const existingIndex = config.profiles.findIndex((p) => p.name === profile.name);
@@ -129,6 +142,11 @@ export async function setupProfile(): Promise<void> {
   writeConfig(config);
   await storeCredential(profile.name, credential);
 
+  // Store API key if provided
+  if (apiKey && apiKey.trim()) {
+    await storeApiKey(profile.name, apiKey.trim());
+  }
+
   console.log(chalk.green(`\n✅ Profile "${profile.name}" saved successfully!`));
   if (config.profiles.length === 1) {
     console.log(chalk.green(`   Set as default profile.`));
@@ -154,12 +172,17 @@ export async function listProfiles(): Promise<void> {
     const prefix = isDefault ? chalk.green('✓ [default]') : '  ';
     const credStatus = profile.credential ? chalk.green('✓') : chalk.red('✗');
 
+    // Check API key status
+    const apiKey = await getApiKey(profile.name);
+    const apiKeyStatus = apiKey ? chalk.green('✓') : chalk.yellow('✗');
+
     console.log(`${prefix} ${chalk.bold(profile.name)}`);
     console.log(`     URL: ${profile.baseUrl}`);
     if (profile.model) {
       console.log(`     Model: ${profile.model}`);
     }
-    console.log(`     Token: ${credStatus}`);
+    console.log(`     Token (AUTH): ${credStatus}`);
+    console.log(`     Token (API):  ${apiKeyStatus}`);
     console.log();
   }
 }
@@ -217,6 +240,7 @@ export async function deleteProfile(name: string): Promise<void> {
 
   writeConfig(config);
   await deleteCredential(name);
+  await deleteApiKey(name);
 
   console.log(chalk.green(`✅ Profile "${name}" deleted.`));
   if (config.defaultProfile) {

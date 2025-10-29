@@ -23,6 +23,7 @@ const CONFIG_FILE = process.env.AI_CLAUDE_CONFIG_PATH || join(homedir(), '.ai-cl
 export interface StoredData {
   config: Config;
   credentials?: Record<string, string>; // Only used when keytar is unavailable
+  apiKeys?: Record<string, string>; // Only used when keytar is unavailable
 }
 
 /**
@@ -137,4 +138,59 @@ export async function getAllProfilesWithCredentials(): Promise<ProfileWithCreden
  */
 export function isKeytarAvailable(): boolean {
   return keytarAvailable;
+}
+
+/**
+ * Store API key securely (keytar) or fallback to file
+ */
+export async function storeApiKey(profileName: string, apiKey: string): Promise<void> {
+  if (keytarAvailable && keytar) {
+    await keytar.setPassword(SERVICE_NAME, `${profileName}:api_key`, apiKey);
+  } else {
+    // Fallback: store in file
+    const data: StoredData = existsSync(CONFIG_FILE)
+      ? JSON.parse(readFileSync(CONFIG_FILE, 'utf-8'))
+      : { config: { profiles: [] }, credentials: {}, apiKeys: {} };
+
+    if (!data.apiKeys) {
+      data.apiKeys = {};
+    }
+    data.apiKeys[profileName] = apiKey;
+    writeFileSync(CONFIG_FILE, JSON.stringify(data, null, 2));
+  }
+}
+
+/**
+ * Retrieve API key
+ */
+export async function getApiKey(profileName: string): Promise<string | null> {
+  if (keytarAvailable && keytar) {
+    return await keytar.getPassword(SERVICE_NAME, `${profileName}:api_key`);
+  } else {
+    // Fallback: read from file
+    if (!existsSync(CONFIG_FILE)) {
+      return null;
+    }
+    const data: StoredData = JSON.parse(readFileSync(CONFIG_FILE, 'utf-8'));
+    return data.apiKeys?.[profileName] || null;
+  }
+}
+
+/**
+ * Delete API key
+ */
+export async function deleteApiKey(profileName: string): Promise<void> {
+  if (keytarAvailable && keytar) {
+    await keytar.deletePassword(SERVICE_NAME, `${profileName}:api_key`);
+  } else {
+    // Fallback: delete from file
+    if (!existsSync(CONFIG_FILE)) {
+      return;
+    }
+    const data: StoredData = JSON.parse(readFileSync(CONFIG_FILE, 'utf-8'));
+    if (data.apiKeys && data.apiKeys[profileName]) {
+      delete data.apiKeys[profileName];
+      writeFileSync(CONFIG_FILE, JSON.stringify(data, null, 2));
+    }
+  }
 }

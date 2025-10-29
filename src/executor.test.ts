@@ -45,18 +45,19 @@ describe('executor', () => {
     });
 
     it('should always use ANTHROPIC_AUTH_TOKEN for credentials', async () => {
-      const env = await prepareEnvironment(mockProfile, 'my-secret-token');
+      const env = await prepareEnvironment(mockProfile, 'my-secret-token', '');
 
-      expect(env).not.toHaveProperty('ANTHROPIC_API_KEY');
+      expect(env).toHaveProperty('ANTHROPIC_API_KEY', '');
       expect(env).toHaveProperty('ANTHROPIC_AUTH_TOKEN', 'my-secret-token');
       expect(env).toHaveProperty('OTHER_VAR', 'keep-this');
     });
 
     it('should set ANTHROPIC_BASE_URL for non-default base URLs', async () => {
-      const env = await prepareEnvironment(mockProfile, 'test-token');
+      const env = await prepareEnvironment(mockProfile, 'test-token', 'test-api-key');
 
       expect(env).toHaveProperty('ANTHROPIC_BASE_URL', 'https://api.example.com');
       expect(env).toHaveProperty('ANTHROPIC_AUTH_TOKEN', 'test-token');
+      expect(env).toHaveProperty('ANTHROPIC_API_KEY', 'test-api-key');
     });
 
     it('should not set ANTHROPIC_BASE_URL for default Anthropic URL', async () => {
@@ -65,10 +66,11 @@ describe('executor', () => {
         baseUrl: 'https://api.anthropic.com'
       };
 
-      const env = await prepareEnvironment(anthropicProfile, 'test-token');
+      const env = await prepareEnvironment(anthropicProfile, 'test-token', '');
 
       expect(env).not.toHaveProperty('ANTHROPIC_BASE_URL');
       expect(env).toHaveProperty('ANTHROPIC_AUTH_TOKEN', 'test-token');
+      expect(env).toHaveProperty('ANTHROPIC_API_KEY', '');
     });
 
     it('should handle Moonshot profile correctly', async () => {
@@ -77,10 +79,11 @@ describe('executor', () => {
         baseUrl: 'https://api.moonshot.cn/anthropic'
       };
 
-      const env = await prepareEnvironment(moonshotProfile, 'moonshot-token-123');
+      const env = await prepareEnvironment(moonshotProfile, 'moonshot-token-123', 'moonshot-api-key');
 
       expect(env).toHaveProperty('ANTHROPIC_AUTH_TOKEN', 'moonshot-token-123');
       expect(env).toHaveProperty('ANTHROPIC_BASE_URL', 'https://api.moonshot.cn/anthropic');
+      expect(env).toHaveProperty('ANTHROPIC_API_KEY', 'moonshot-api-key');
     });
 
     it('should handle BigModel profile correctly', async () => {
@@ -89,10 +92,24 @@ describe('executor', () => {
         baseUrl: 'https://open.bigmodel.cn/api/anthropic'
       };
 
-      const env = await prepareEnvironment(bigmodelProfile, 'bigmodel-token-456');
+      const env = await prepareEnvironment(bigmodelProfile, 'bigmodel-token-456', '');
 
       expect(env).toHaveProperty('ANTHROPIC_AUTH_TOKEN', 'bigmodel-token-456');
       expect(env).toHaveProperty('ANTHROPIC_BASE_URL', 'https://open.bigmodel.cn/api/anthropic');
+      expect(env).toHaveProperty('ANTHROPIC_API_KEY', '');
+    });
+
+    it('should always set ANTHROPIC_API_KEY even when empty', async () => {
+      const env = await prepareEnvironment(mockProfile, 'test-token', '');
+
+      expect(env).toHaveProperty('ANTHROPIC_API_KEY', '');
+    });
+
+    it('should set ANTHROPIC_API_KEY when provided', async () => {
+      const env = await prepareEnvironment(mockProfile, 'test-token', 'my-api-key-123');
+
+      expect(env).toHaveProperty('ANTHROPIC_API_KEY', 'my-api-key-123');
+      expect(env).toHaveProperty('ANTHROPIC_AUTH_TOKEN', 'test-token');
     });
   });
 });

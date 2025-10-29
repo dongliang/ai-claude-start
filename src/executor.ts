@@ -1,7 +1,7 @@
 import { spawn } from 'child_process';
 import chalk from 'chalk';
 import inquirer from 'inquirer';
-import { readConfig, getCredential } from './storage.js';
+import { readConfig, getCredential, getApiKey } from './storage.js';
 import type { Profile } from './types.js';
 
 /**
@@ -22,15 +22,20 @@ export function sanitizeEnvironment(): Record<string, string> {
 /**
  * Prepare environment for a profile
  * Always use ANTHROPIC_AUTH_TOKEN for credentials
+ * Always set ANTHROPIC_API_KEY (even if empty)
  */
 export async function prepareEnvironment(
   profile: Profile,
-  credential: string
+  credential: string,
+  apiKey: string
 ): Promise<Record<string, string>> {
   const env = sanitizeEnvironment();
 
   // Always use ANTHROPIC_AUTH_TOKEN
   env['ANTHROPIC_AUTH_TOKEN'] = credential;
+
+  // Always set ANTHROPIC_API_KEY (even if empty)
+  env['ANTHROPIC_API_KEY'] = apiKey;
 
   // Set base URL if not default Anthropic
   if (profile.baseUrl !== 'https://api.anthropic.com') {
@@ -107,8 +112,11 @@ export async function executeWithProfile(
     process.exit(1);
   }
 
+  // Get API key (optional, defaults to empty string)
+  const apiKey = await getApiKey(targetProfile.name) || '';
+
   // Prepare environment
-  const env = await prepareEnvironment(targetProfile, credential);
+  const env = await prepareEnvironment(targetProfile, credential, apiKey);
 
   // Determine command to run
   const cmdBinary = process.env.CLAUDE_CMD || args.find((arg) => arg === '--cmd')
